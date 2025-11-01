@@ -1,8 +1,4 @@
-Here’s a clean, professional **README.md** template you can use for your first Docker project — assuming you choose the name **`INIT-D`** (you can swap it for any of the other names easily):
 
----
-
-````markdown
 # INIT-D 🐋  
 **Initialization Daemon — a minimal Docker-first experiment**
 
@@ -93,9 +89,4 @@ MIT License © 2025
 Maintained by **Priyam Jyoti Chakrabarty**
 *(IIIT Allahabad | GDG AI/ML Wing | Research & Systems Development)*
 
-```
 
----
-
-Would you like me to adapt this README to reflect a **specific language stack** (like Python, Node.js, or C++) inside the Dockerfile section? That way, it’ll match exactly what INIT-D will run.
-```
