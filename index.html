@@ -14,11 +14,11 @@
         body {
             overflow: hidden;
             font-family: Arial, sans-serif;
+            background: #4a90e2;
         }
         
         #gameCanvas {
             display: block;
-            background: #4a90e2;
         }
         
         #gameOver {
@@ -32,6 +32,7 @@
             border-radius: 10px;
             text-align: center;
             display: none;
+            z-index: 10;
         }
         
         #gameOver h1 {
@@ -62,6 +63,7 @@
             font-size: 24px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
         }
         
         #instructions {
@@ -72,13 +74,29 @@
             font-size: 18px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             text-align: right;
+            z-index: 5;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            z-index: 5;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    <div id="score">Score: 0</div>
-    <div id="instructions">
+    <div id="loading">
+        Loading game...<br>
+        <small>If images don't load, the game will use colored shapes</small>
+    </div>
+    <div id="score" style="display:none;">Score: 0</div>
+    <div id="instructions" style="display:none;">
         Use Arrow Keys ↑↓<br>
         or W/S to move
     </div>
@@ -96,44 +114,81 @@
         canvas.height = window.innerHeight;
         
         // Game variables
-        const TRACKS = [
+        let TRACKS = [
             canvas.height * 0.25,
             canvas.height * 0.5,
             canvas.height * 0.75
         ];
         
-        let currentTrack = 1; // Start on middle track
+        let currentTrack = 1;
         let score = 0;
-        let gameRunning = true;
+        let gameRunning = false;
         let whales = [];
         let frameCount = 0;
         
-        // Load images
-        const bgImage = new Image();
-        bgImage.src = 'https://postimg.cc/BtDLJ4wp';
+        // Image objects
+        let bgImage = null;
+        let boyImage = null;
+        let whaleImage = null;
+        let imagesLoaded = 0;
         
-        const boyImage = new Image();
-        boyImage.src = 'https://postimg.cc/QFSKvmnr';
+        // Try to load images
+        function tryLoadImage(src, name) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                
+                const timeout = setTimeout(() => {
+                    console.log(`${name} image timed out`);
+                    resolve(null);
+                }, 5000);
+                
+                img.onload = () => {
+                    clearTimeout(timeout);
+                    console.log(`${name} image loaded successfully`);
+                    resolve(img);
+                };
+                
+                img.onerror = () => {
+                    clearTimeout(timeout);
+                    console.log(`${name} image failed to load`);
+                    resolve(null);
+                };
+                
+                img.src = src;
+            });
+        }
         
-        const whaleImage = new Image();
-        whaleImage.src = 'https://postimg.cc/rRtSk4Rg';
+        // Load all images
+        async function loadImages() {
+            bgImage = await tryLoadImage('https://i.postimg.cc/0jhs7Wpr/painting-sea-with-clouds-ocean-background-384401-4657.avif', 'Background');
+            boyImage = await tryLoadImage('https://i.postimg.cc/t4WXNjv0/Screenshot-2025-11-01-231407-removebg-preview.png', 'Boy');
+            whaleImage = await tryLoadImage('https://i.postimg.cc/RV8FTGMz/Screenshot-2025-11-01-230530-removebg-preview.png', 'Whale');
+            
+            // Start game regardless of image load status
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('score').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            gameRunning = true;
+            gameLoop();
+        }
         
         // Boy object
         const boy = {
-            x: 100,
+            x: 150,
             y: TRACKS[currentTrack],
-            width: 80,
-            height: 80,
+            width: 100,
+            height: 100,
             targetY: TRACKS[currentTrack]
         };
         
         // Whale class
         class Whale {
             constructor(track) {
-                this.x = canvas.width;
+                this.x = canvas.width + 100;
                 this.y = TRACKS[track];
-                this.width = 120;
-                this.height = 80;
+                this.width = 150;
+                this.height = 100;
                 this.speed = 3 + Math.random() * 2;
                 this.passed = false;
             }
@@ -143,7 +198,16 @@
             }
             
             draw() {
-                ctx.drawImage(whaleImage, this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                if (whaleImage) {
+                    ctx.drawImage(whaleImage, this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                } else {
+                    // Fallback: draw a blue rectangle
+                    ctx.fillStyle = '#2c5aa0';
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                    ctx.strokeStyle = '#1a3a6b';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                }
             }
             
             isOffScreen() {
@@ -151,10 +215,11 @@
             }
             
             checkCollision(boy) {
-                return !(boy.x + boy.width/2 < this.x - this.width/2 ||
-                        boy.x - boy.width/2 > this.x + this.width/2 ||
-                        boy.y + boy.height/2 < this.y - this.height/2 ||
-                        boy.y - boy.height/2 > this.y + this.height/2);
+                const buffer = 15;
+                return !(boy.x + boy.width/2 - buffer < this.x - this.width/2 ||
+                        boy.x - boy.width/2 + buffer > this.x + this.width/2 ||
+                        boy.y + boy.height/2 - buffer < this.y - this.height/2 ||
+                        boy.y - boy.height/2 + buffer > this.y + this.height/2);
             }
         }
         
@@ -175,7 +240,7 @@
             }
         });
         
-        // Touch controls for mobile
+        // Touch controls
         let touchStartY = 0;
         canvas.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
@@ -203,7 +268,6 @@
         }
         
         function updateBoy() {
-            // Smooth movement to target track
             const diff = boy.targetY - boy.y;
             if (Math.abs(diff) > 1) {
                 boy.y += diff * 0.15;
@@ -213,7 +277,18 @@
         }
         
         function drawBoy() {
-            ctx.drawImage(boyImage, boy.x - boy.width/2, boy.y - boy.height/2, boy.width, boy.height);
+            if (boyImage) {
+                ctx.drawImage(boyImage, boy.x - boy.width/2, boy.y - boy.height/2, boy.width, boy.height);
+            } else {
+                // Fallback: draw a yellow circle
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(boy.x, boy.y, boy.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
         }
         
         function updateScore() {
@@ -239,13 +314,25 @@
         }
         
         function gameLoop() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             // Draw background
-            ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            if (bgImage) {
+                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Fallback: gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#4a90e2');
+                gradient.addColorStop(1, '#2c5aa0');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             
             if (gameRunning) {
                 frameCount++;
                 
-                // Spawn whales periodically
+                // Spawn whales
                 if (frameCount % 90 === 0) {
                     spawnWhale();
                 }
@@ -253,7 +340,7 @@
                 // Update boy
                 updateBoy();
                 
-                // Update whales
+                // Update and draw whales
                 for (let i = whales.length - 1; i >= 0; i--) {
                     whales[i].update();
                     whales[i].draw();
@@ -263,14 +350,14 @@
                         gameOver();
                     }
                     
-                    // Increase score when whale passes
+                    // Score
                     if (!whales[i].passed && whales[i].x < boy.x) {
                         whales[i].passed = true;
                         score++;
                         updateScore();
                     }
                     
-                    // Remove off-screen whales
+                    // Remove off-screen
                     if (whales[i].isOffScreen()) {
                         whales.splice(i, 1);
                     }
@@ -283,33 +370,22 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // Wait for images to load
-        let imagesLoaded = 0;
-        const totalImages = 3;
-        
-        function imageLoaded() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-                gameLoop();
-            }
-        }
-        
-        bgImage.onload = imageLoaded;
-        boyImage.onload = imageLoaded;
-        whaleImage.onload = imageLoaded;
-        
-        // Handle window resize
+        // Handle resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            // Recalculate tracks
-            TRACKS[0] = canvas.height * 0.25;
-            TRACKS[1] = canvas.height * 0.5;
-            TRACKS[2] = canvas.height * 0.75;
+            TRACKS = [
+                canvas.height * 0.25,
+                canvas.height * 0.5,
+                canvas.height * 0.75
+            ];
             
             boy.targetY = TRACKS[currentTrack];
         });
+        
+        // Start loading images
+        loadImages();
     </script>
 </body>
 </html>
