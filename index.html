@@ -27,14 +27,143 @@
             display: block;
         }
         
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        #startMenu h1 {
+            font-size: 64px;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+        
+        #startMenu p {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .menu-button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .menu-button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.4);
+        }
+        
+        .menu-button.secondary {
+            background: #6c757d;
+        }
+        
+        .menu-button.secondary:hover {
+            background: #5a6268;
+        }
+        
+        #instructionsMenu {
+            padding: 40px;
+            max-width: 600px;
+        }
+        
+        #instructionsMenu h2 {
+            font-size: 48px;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .instruction-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .instruction-item strong {
+            color: #FFD700;
+        }
+        
+        #settingsMenu {
+            padding: 40px;
+        }
+        
+        #settingsMenu h2 {
+            font-size: 48px;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            margin: 15px 0;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            min-width: 400px;
+        }
+        
+        .toggle-button {
+            padding: 10px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .toggle-button.on {
+            background: #28a745;
+            color: white;
+        }
+        
+        .toggle-button.off {
+            background: #dc3545;
+            color: white;
+        }
+        
         #gameOver {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 30px;
+            padding: 40px;
             border-radius: 10px;
             text-align: center;
             display: none;
@@ -44,21 +173,12 @@
         #gameOver h1 {
             margin-bottom: 20px;
             font-size: 48px;
+            color: #FFD700;
         }
         
-        #gameOver button {
-            padding: 15px 30px;
-            font-size: 20px;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        
-        #gameOver button:hover {
-            background: #357abd;
+        #gameOver p {
+            font-size: 24px;
+            margin: 10px 0;
         }
         
         #score {
@@ -94,6 +214,25 @@
             z-index: 5;
         }
         
+        #pauseButton {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.3s;
+        }
+        
+        #pauseButton:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
         #loading {
             position: absolute;
             top: 50%;
@@ -108,6 +247,52 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    
+    <!-- Start Menu -->
+    <div id="startMenu" class="menu-screen">
+        <h1>🐋 WHALE DODGE 🐋</h1>
+        <p>Avoid the whales and survive!</p>
+        <button class="menu-button" onclick="startGame()">Start Game</button>
+        <button class="menu-button secondary" onclick="showInstructions()">How to Play</button>
+        <button class="menu-button secondary" onclick="showSettings()">Settings</button>
+    </div>
+    
+    <!-- Instructions Menu -->
+    <div id="instructionsMenu" class="menu-screen hidden">
+        <h2>How to Play</h2>
+        <div class="instruction-item">
+            <strong>🎯 Objective:</strong> Dodge the whales and survive as long as possible!
+        </div>
+        <div class="instruction-item">
+            <strong>⌨️ Controls:</strong> Use Arrow Keys (↑↓) or W/S to move between 5 tracks
+        </div>
+        <div class="instruction-item">
+            <strong>📈 Difficulty:</strong> Game gets harder every 10 points - whales spawn faster and move quicker!
+        </div>
+        <div class="instruction-item">
+            <strong>💥 Game Over:</strong> Touch a whale and it's game over!
+        </div>
+        <div class="instruction-item">
+            <strong>⏸️ Pause:</strong> Press SPACEBAR to pause the game
+        </div>
+        <button class="menu-button" onclick="backToMainMenu()">Back</button>
+    </div>
+    
+    <!-- Settings Menu -->
+    <div id="settingsMenu" class="menu-screen hidden">
+        <h2>Settings</h2>
+        <div class="setting-item">
+            <span>🔊 Sound Effects</span>
+            <button id="soundToggle" class="toggle-button on" onclick="toggleSound()">ON</button>
+        </div>
+        <div class="setting-item">
+            <span>🎵 Background Music</span>
+            <button id="musicToggle" class="toggle-button on" onclick="toggleMusic()">ON</button>
+        </div>
+        <button class="menu-button" onclick="backToMainMenu()" style="margin-top: 30px;">Back</button>
+    </div>
+    
+    <!-- Game UI -->
     <div id="loading">
         Loading game...<br>
         <small>If images don't load, the game will use colored shapes</small>
@@ -115,15 +300,18 @@
     <div id="score" style="display:none;">Score: 0</div>
     <div id="difficulty" style="display:none;">Level: 1</div>
     <div id="instructions" style="display:none;">
-        Use Arrow Keys ↑↓<br>
-        or W/S to move<br>
-        <small>5 tracks now!</small>
+        Arrow Keys ↑↓ or W/S<br>
+        <small>Spacebar to Pause</small>
     </div>
+    <button id="pauseButton" style="display:none;" onclick="togglePause()">Pause (Space)</button>
+    
+    <!-- Game Over Screen -->
     <div id="gameOver">
         <h1>Game Over!</h1>
         <p id="finalScore"></p>
         <p id="finalLevel"></p>
-        <button onclick="restartGame()">Play Again</button>
+        <button class="menu-button" onclick="restartGame()">Play Again</button>
+        <button class="menu-button secondary" onclick="returnToMenu()">Main Menu</button>
     </div>
 
     <script>
@@ -132,6 +320,13 @@
         
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        
+        // Game state
+        let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameover'
+        
+        // Settings
+        let soundEnabled = true;
+        let musicEnabled = true;
         
         // Game variables
         let TRACKS = [
@@ -142,15 +337,16 @@
             canvas.height * 0.75
         ];
         
-        let currentTrack = 2; // Start on middle track (index 2 of 5)
+        let currentTrack = 2;
         let score = 0;
         let gameRunning = false;
         let whales = [];
         let frameCount = 0;
+        let isPaused = false;
         
         // Difficulty variables
         let difficultyLevel = 1;
-        let baseSpawnRate = 90; // Frames between spawns
+        let baseSpawnRate = 90;
         let currentSpawnRate = baseSpawnRate;
         let baseSpeed = 3;
         let speedMultiplier = 1;
@@ -159,6 +355,111 @@
         let bgImage = null;
         let boyImage = null;
         let whaleImage = null;
+        let imagesLoaded = false;
+        
+        // Menu Functions
+        function showInstructions() {
+            document.getElementById('startMenu').classList.add('hidden');
+            document.getElementById('instructionsMenu').classList.remove('hidden');
+        }
+        
+        function showSettings() {
+            document.getElementById('startMenu').classList.add('hidden');
+            document.getElementById('settingsMenu').classList.remove('hidden');
+        }
+        
+        function backToMainMenu() {
+            document.getElementById('instructionsMenu').classList.add('hidden');
+            document.getElementById('settingsMenu').classList.add('hidden');
+            document.getElementById('startMenu').classList.remove('hidden');
+        }
+        
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('soundToggle');
+            btn.textContent = soundEnabled ? 'ON' : 'OFF';
+            btn.className = soundEnabled ? 'toggle-button on' : 'toggle-button off';
+        }
+        
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            const btn = document.getElementById('musicToggle');
+            btn.textContent = musicEnabled ? 'ON' : 'OFF';
+            btn.className = musicEnabled ? 'toggle-button on' : 'toggle-button off';
+        }
+        
+        function startGame() {
+            document.getElementById('startMenu').classList.add('hidden');
+            
+            if (!imagesLoaded) {
+                document.getElementById('loading').style.display = 'block';
+                loadImages().then(() => {
+                    initializeGame();
+                });
+            } else {
+                initializeGame();
+            }
+        }
+        
+        function initializeGame() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('score').style.display = 'block';
+            document.getElementById('difficulty').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('pauseButton').style.display = 'block';
+            
+            gameState = 'playing';
+            gameRunning = true;
+            isPaused = false;
+            
+            if (!frameCount) {
+                gameLoop();
+            }
+        }
+        
+        function togglePause() {
+            if (gameState !== 'playing' && gameState !== 'paused') return;
+            
+            isPaused = !isPaused;
+            gameState = isPaused ? 'paused' : 'playing';
+            
+            const btn = document.getElementById('pauseButton');
+            btn.textContent = isPaused ? 'Resume (Space)' : 'Pause (Space)';
+            
+            if (isPaused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press SPACEBAR to Resume', canvas.width / 2, canvas.height / 2 + 50);
+            }
+        }
+        
+        function returnToMenu() {
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            document.getElementById('difficulty').style.display = 'none';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('startMenu').classList.remove('hidden');
+            
+            gameState = 'menu';
+            gameRunning = false;
+            
+            // Reset game
+            currentTrack = 2;
+            score = 0;
+            difficultyLevel = 1;
+            speedMultiplier = 1;
+            currentSpawnRate = baseSpawnRate;
+            whales = [];
+            frameCount = 0;
+            boy.y = TRACKS[currentTrack];
+            boy.targetY = TRACKS[currentTrack];
+        }
         
         // Try to load images
         function tryLoadImage(src, name) {
@@ -191,14 +492,7 @@
             bgImage = await tryLoadImage('assets/sea.jpg', 'Background');
             boyImage = await tryLoadImage('assets/boy.png', 'Boy');
             whaleImage = await tryLoadImage('assets/whale.png', 'Whale');
-            
-            // Start game regardless of image load status
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('score').style.display = 'block';
-            document.getElementById('difficulty').style.display = 'block';
-            document.getElementById('instructions').style.display = 'block';
-            gameRunning = true;
-            gameLoop();
+            imagesLoaded = true;
         }
         
         // Boy object
@@ -217,7 +511,6 @@
                 this.y = TRACKS[track];
                 this.width = 150;
                 this.height = 100;
-                // Speed increases with difficulty
                 this.speed = (baseSpeed + Math.random() * 2) * speedMultiplier;
                 this.passed = false;
             }
@@ -230,7 +523,6 @@
                 if (whaleImage) {
                     ctx.drawImage(whaleImage, this.x - this.width/2, this.y - this.height/2, this.width, this.height);
                 } else {
-                    // Fallback: draw a blue rectangle
                     ctx.fillStyle = '#2c5aa0';
                     ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
                     ctx.strokeStyle = '#1a3a6b';
@@ -258,13 +550,8 @@
             
             if (newLevel !== difficultyLevel) {
                 difficultyLevel = newLevel;
-                
-                // Spawn rate: gets faster (lower number = more frequent)
                 currentSpawnRate = Math.max(30, baseSpawnRate - (difficultyLevel - 1) * 8);
-                
-                // Speed multiplier: whales get faster
                 speedMultiplier = 1 + (difficultyLevel - 1) * 0.15;
-                
                 updateDifficultyDisplay();
             }
         }
@@ -275,7 +562,13 @@
         
         // Input handling
         document.addEventListener('keydown', (e) => {
-            if (!gameRunning) return;
+            if (e.key === ' ') {
+                e.preventDefault();
+                togglePause();
+                return;
+            }
+            
+            if (!gameRunning || isPaused) return;
             
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 if (currentTrack > 0) {
@@ -297,7 +590,7 @@
         });
         
         canvas.addEventListener('touchend', (e) => {
-            if (!gameRunning) return;
+            if (!gameRunning || isPaused) return;
             const touchEndY = e.changedTouches[0].clientY;
             const diff = touchStartY - touchEndY;
             
@@ -330,7 +623,6 @@
             if (boyImage) {
                 ctx.drawImage(boyImage, boy.x - boy.width/2, boy.y - boy.height/2, boy.width, boy.height);
             } else {
-                // Fallback: draw a yellow circle
                 ctx.fillStyle = '#FFD700';
                 ctx.beginPath();
                 ctx.arc(boy.x, boy.y, boy.width/2, 0, Math.PI * 2);
@@ -347,6 +639,7 @@
         
         function gameOver() {
             gameRunning = false;
+            gameState = 'gameover';
             document.getElementById('finalScore').textContent = `Final Score: ${score}`;
             document.getElementById('finalLevel').textContent = `Reached Level: ${difficultyLevel}`;
             document.getElementById('gameOver').style.display = 'block';
@@ -359,11 +652,14 @@
             speedMultiplier = 1;
             currentSpawnRate = baseSpawnRate;
             gameRunning = true;
+            gameState = 'playing';
+            isPaused = false;
             whales = [];
             frameCount = 0;
             boy.y = TRACKS[currentTrack];
             boy.targetY = TRACKS[currentTrack];
             document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('pauseButton').textContent = 'Pause (Space)';
             updateScore();
             updateDifficultyDisplay();
         }
@@ -376,7 +672,6 @@
             if (bgImage) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             } else {
-                // Fallback: gradient background
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#4a90e2');
                 gradient.addColorStop(1, '#2c5aa0');
@@ -384,7 +679,7 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             
-            if (gameRunning) {
+            if (gameRunning && !isPaused) {
                 frameCount++;
                 
                 // Spawn whales at dynamic rate
@@ -442,8 +737,8 @@
             boy.targetY = TRACKS[currentTrack];
         });
         
-        // Start loading images
-        loadImages();
+        // Start with menu
+        gameLoop();
     </script>
 </body>
 </html>
