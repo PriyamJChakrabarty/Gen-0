@@ -86,6 +86,58 @@
             background: #5a6268;
         }
         
+        .menu-button.success {
+            background: #28a745;
+        }
+        
+        .menu-button.success:hover {
+            background: #218838;
+        }
+        
+        .menu-button.warning {
+            background: #ff9800;
+        }
+        
+        .menu-button.warning:hover {
+            background: #e68900;
+        }
+        
+        #modeSelect h2 {
+            font-size: 48px;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+        }
+        
+        .mode-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            margin: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            min-width: 400px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .mode-card:hover {
+            border-color: #FFD700;
+            transform: scale(1.05);
+        }
+        
+        .mode-card h3 {
+            font-size: 32px;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .mode-card p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
         #instructionsMenu {
             padding: 40px;
             max-width: 600px;
@@ -168,6 +220,7 @@
             text-align: center;
             display: none;
             z-index: 10;
+            min-width: 400px;
         }
         
         #gameOver h1 {
@@ -192,6 +245,29 @@
             z-index: 5;
         }
         
+        #timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFD700;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
+            display: none;
+        }
+        
+        #timer.warning {
+            color: #ff4444;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+        
         #difficulty {
             position: absolute;
             top: 60px;
@@ -201,6 +277,18 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             z-index: 5;
+        }
+        
+        #modeDisplay {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            color: #4af;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
+            display: none;
         }
         
         #instructions {
@@ -252,9 +340,25 @@
     <div id="startMenu" class="menu-screen">
         <h1>🐋 WHALE DODGE 🐋</h1>
         <p>Avoid the whales and survive!</p>
-        <button class="menu-button" onclick="startGame()">Start Game</button>
+        <button class="menu-button" onclick="showModeSelect()">Start Game</button>
         <button class="menu-button secondary" onclick="showInstructions()">How to Play</button>
         <button class="menu-button secondary" onclick="showSettings()">Settings</button>
+    </div>
+    
+    <!-- Mode Selection -->
+    <div id="modeSelect" class="menu-screen hidden">
+        <h2>Select Game Mode</h2>
+        <div class="mode-card">
+            <h3>⏱️ Time Attack</h3>
+            <p>Get the highest score in 60 seconds!<br>Fast-paced action with time pressure.</p>
+            <button class="menu-button warning" onclick="startGame('timed')">Play Time Attack</button>
+        </div>
+        <div class="mode-card">
+            <h3>♾️ Endless Mode</h3>
+            <p>Survive as long as possible!<br>Progressive difficulty, no time limit.</p>
+            <button class="menu-button success" onclick="startGame('endless')">Play Endless</button>
+        </div>
+        <button class="menu-button secondary" onclick="backToMainMenu()" style="margin-top: 20px;">Back</button>
     </div>
     
     <!-- Instructions Menu -->
@@ -265,6 +369,11 @@
         </div>
         <div class="instruction-item">
             <strong>⌨️ Controls:</strong> Use Arrow Keys (↑↓) or W/S to move between 5 tracks
+        </div>
+        <div class="instruction-item">
+            <strong>🎮 Game Modes:</strong>
+            <br>• <strong>Time Attack:</strong> Score as much as possible in 60 seconds
+            <br>• <strong>Endless:</strong> Survive indefinitely with increasing difficulty
         </div>
         <div class="instruction-item">
             <strong>📈 Difficulty:</strong> Game gets harder every 10 points - whales spawn faster and move quicker!
@@ -298,7 +407,9 @@
         <small>If images don't load, the game will use colored shapes</small>
     </div>
     <div id="score" style="display:none;">Score: 0</div>
+    <div id="timer" style="display:none;">60</div>
     <div id="difficulty" style="display:none;">Level: 1</div>
+    <div id="modeDisplay" style="display:none;">Mode: Endless</div>
     <div id="instructions" style="display:none;">
         Arrow Keys ↑↓ or W/S<br>
         <small>Spacebar to Pause</small>
@@ -308,8 +419,10 @@
     <!-- Game Over Screen -->
     <div id="gameOver">
         <h1>Game Over!</h1>
+        <p id="gameModeResult"></p>
         <p id="finalScore"></p>
         <p id="finalLevel"></p>
+        <p id="finalTime"></p>
         <button class="menu-button" onclick="restartGame()">Play Again</button>
         <button class="menu-button secondary" onclick="returnToMenu()">Main Menu</button>
     </div>
@@ -323,10 +436,16 @@
         
         // Game state
         let gameState = 'menu'; // 'menu', 'playing', 'paused', 'gameover'
+        let gameMode = 'endless'; // 'endless' or 'timed'
         
         // Settings
         let soundEnabled = true;
         let musicEnabled = true;
+        
+        // Timer variables
+        let timeRemaining = 60;
+        let startTime = 0;
+        let timerInterval = null;
         
         // Game variables
         let TRACKS = [
@@ -358,6 +477,11 @@
         let imagesLoaded = false;
         
         // Menu Functions
+        function showModeSelect() {
+            document.getElementById('startMenu').classList.add('hidden');
+            document.getElementById('modeSelect').classList.remove('hidden');
+        }
+        
         function showInstructions() {
             document.getElementById('startMenu').classList.add('hidden');
             document.getElementById('instructionsMenu').classList.remove('hidden');
@@ -371,6 +495,7 @@
         function backToMainMenu() {
             document.getElementById('instructionsMenu').classList.add('hidden');
             document.getElementById('settingsMenu').classList.add('hidden');
+            document.getElementById('modeSelect').classList.add('hidden');
             document.getElementById('startMenu').classList.remove('hidden');
         }
         
@@ -388,8 +513,9 @@
             btn.className = musicEnabled ? 'toggle-button on' : 'toggle-button off';
         }
         
-        function startGame() {
-            document.getElementById('startMenu').classList.add('hidden');
+        function startGame(mode) {
+            gameMode = mode;
+            document.getElementById('modeSelect').classList.add('hidden');
             
             if (!imagesLoaded) {
                 document.getElementById('loading').style.display = 'block';
@@ -407,6 +533,17 @@
             document.getElementById('difficulty').style.display = 'block';
             document.getElementById('instructions').style.display = 'block';
             document.getElementById('pauseButton').style.display = 'block';
+            document.getElementById('modeDisplay').style.display = 'block';
+            document.getElementById('modeDisplay').textContent = `Mode: ${gameMode === 'timed' ? 'Time Attack' : 'Endless'}`;
+            
+            if (gameMode === 'timed') {
+                document.getElementById('timer').style.display = 'block';
+                timeRemaining = 60;
+                startTime = Date.now();
+                startTimer();
+            } else {
+                document.getElementById('timer').style.display = 'none';
+            }
             
             gameState = 'playing';
             gameRunning = true;
@@ -415,6 +552,44 @@
             if (!frameCount) {
                 gameLoop();
             }
+        }
+        
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!isPaused && gameRunning) {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    timeRemaining = 60 - elapsed;
+                    
+                    if (timeRemaining <= 0) {
+                        timeRemaining = 0;
+                        timeUp();
+                    }
+                    
+                    updateTimerDisplay();
+                }
+            }, 100);
+        }
+        
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = `⏱️ ${timeRemaining}s`;
+            
+            if (timeRemaining <= 10) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+        }
+        
+        function timeUp() {
+            clearInterval(timerInterval);
+            gameRunning = false;
+            gameState = 'gameover';
+            document.getElementById('gameModeResult').textContent = '⏱️ Time Attack Complete!';
+            document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            document.getElementById('finalLevel').textContent = `Reached Level: ${difficultyLevel}`;
+            document.getElementById('finalTime').textContent = `Time: 60 seconds`;
+            document.getElementById('gameOver').style.display = 'block';
         }
         
         function togglePause() {
@@ -439,17 +614,25 @@
         }
         
         function returnToMenu() {
+            if (timerInterval) clearInterval(timerInterval);
+            
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('score').style.display = 'none';
             document.getElementById('difficulty').style.display = 'none';
             document.getElementById('instructions').style.display = 'none';
             document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('timer').style.display = 'none';
+            document.getElementById('modeDisplay').style.display = 'none';
             document.getElementById('startMenu').classList.remove('hidden');
             
             gameState = 'menu';
             gameRunning = false;
             
             // Reset game
+            resetGameState();
+        }
+        
+        function resetGameState() {
             currentTrack = 2;
             score = 0;
             difficultyLevel = 1;
@@ -457,6 +640,7 @@
             currentSpawnRate = baseSpawnRate;
             whales = [];
             frameCount = 0;
+            timeRemaining = 60;
             boy.y = TRACKS[currentTrack];
             boy.targetY = TRACKS[currentTrack];
         }
@@ -638,28 +822,41 @@
         }
         
         function gameOver() {
+            if (timerInterval) clearInterval(timerInterval);
+            
             gameRunning = false;
             gameState = 'gameover';
+            
+            if (gameMode === 'timed') {
+                const timePlayed = 60 - timeRemaining;
+                document.getElementById('gameModeResult').textContent = '💥 Collision in Time Attack!';
+                document.getElementById('finalTime').textContent = `Survived: ${timePlayed} seconds`;
+            } else {
+                document.getElementById('gameModeResult').textContent = '♾️ Endless Mode - Game Over!';
+                document.getElementById('finalTime').textContent = '';
+            }
+            
             document.getElementById('finalScore').textContent = `Final Score: ${score}`;
             document.getElementById('finalLevel').textContent = `Reached Level: ${difficultyLevel}`;
             document.getElementById('gameOver').style.display = 'block';
         }
         
         function restartGame() {
-            currentTrack = 2;
-            score = 0;
-            difficultyLevel = 1;
-            speedMultiplier = 1;
-            currentSpawnRate = baseSpawnRate;
+            if (timerInterval) clearInterval(timerInterval);
+            
+            resetGameState();
+            
             gameRunning = true;
             gameState = 'playing';
             isPaused = false;
-            whales = [];
-            frameCount = 0;
-            boy.y = TRACKS[currentTrack];
-            boy.targetY = TRACKS[currentTrack];
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('pauseButton').textContent = 'Pause (Space)';
+            
+            if (gameMode === 'timed') {
+                startTime = Date.now();
+                startTimer();
+            }
+            
             updateScore();
             updateDifficultyDisplay();
         }
