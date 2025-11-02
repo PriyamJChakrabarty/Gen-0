@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+    REPLACE PLACEHOLDER IMAGES WITH YOUR OWN:
+    - assets/whale.png - Whale character image
+    - assets/boy.png - Boy character image  
+    - assets/sea.jpg - Sea background image
+-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,6 +72,17 @@
             z-index: 5;
         }
         
+        #difficulty {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            color: #FFD700;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+        
         #instructions {
             position: absolute;
             top: 20px;
@@ -96,13 +113,16 @@
         <small>If images don't load, the game will use colored shapes</small>
     </div>
     <div id="score" style="display:none;">Score: 0</div>
+    <div id="difficulty" style="display:none;">Level: 1</div>
     <div id="instructions" style="display:none;">
         Use Arrow Keys ↑↓<br>
-        or W/S to move
+        or W/S to move<br>
+        <small>5 tracks now!</small>
     </div>
     <div id="gameOver">
         <h1>Game Over!</h1>
         <p id="finalScore"></p>
+        <p id="finalLevel"></p>
         <button onclick="restartGame()">Play Again</button>
     </div>
 
@@ -115,28 +135,35 @@
         
         // Game variables
         let TRACKS = [
-            canvas.height * 0.25,
-            canvas.height * 0.5,
+            canvas.height * 0.15,
+            canvas.height * 0.30,
+            canvas.height * 0.45,
+            canvas.height * 0.60,
             canvas.height * 0.75
         ];
         
-        let currentTrack = 1;
+        let currentTrack = 2; // Start on middle track (index 2 of 5)
         let score = 0;
         let gameRunning = false;
         let whales = [];
         let frameCount = 0;
         
+        // Difficulty variables
+        let difficultyLevel = 1;
+        let baseSpawnRate = 90; // Frames between spawns
+        let currentSpawnRate = baseSpawnRate;
+        let baseSpeed = 3;
+        let speedMultiplier = 1;
+        
         // Image objects
         let bgImage = null;
         let boyImage = null;
         let whaleImage = null;
-        let imagesLoaded = 0;
         
         // Try to load images
         function tryLoadImage(src, name) {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.crossOrigin = "anonymous";
                 
                 const timeout = setTimeout(() => {
                     console.log(`${name} image timed out`);
@@ -161,13 +188,14 @@
         
         // Load all images
         async function loadImages() {
-            bgImage = await tryLoadImage('https://i.postimg.cc/0jhs7Wpr/painting-sea-with-clouds-ocean-background-384401-4657.avif', 'Background');
-            boyImage = await tryLoadImage('https://i.postimg.cc/t4WXNjv0/Screenshot-2025-11-01-231407-removebg-preview.png', 'Boy');
-            whaleImage = await tryLoadImage('https://i.postimg.cc/RV8FTGMz/Screenshot-2025-11-01-230530-removebg-preview.png', 'Whale');
+            bgImage = await tryLoadImage('assets/sea.jpg', 'Background');
+            boyImage = await tryLoadImage('assets/boy.png', 'Boy');
+            whaleImage = await tryLoadImage('assets/whale.png', 'Whale');
             
             // Start game regardless of image load status
             document.getElementById('loading').style.display = 'none';
             document.getElementById('score').style.display = 'block';
+            document.getElementById('difficulty').style.display = 'block';
             document.getElementById('instructions').style.display = 'block';
             gameRunning = true;
             gameLoop();
@@ -189,7 +217,8 @@
                 this.y = TRACKS[track];
                 this.width = 150;
                 this.height = 100;
-                this.speed = 3 + Math.random() * 2;
+                // Speed increases with difficulty
+                this.speed = (baseSpeed + Math.random() * 2) * speedMultiplier;
                 this.passed = false;
             }
             
@@ -221,6 +250,27 @@
                         boy.y + boy.height/2 - buffer < this.y - this.height/2 ||
                         boy.y - boy.height/2 + buffer > this.y + this.height/2);
             }
+        }
+        
+        // Update difficulty based on score
+        function updateDifficulty() {
+            const newLevel = Math.floor(score / 10) + 1;
+            
+            if (newLevel !== difficultyLevel) {
+                difficultyLevel = newLevel;
+                
+                // Spawn rate: gets faster (lower number = more frequent)
+                currentSpawnRate = Math.max(30, baseSpawnRate - (difficultyLevel - 1) * 8);
+                
+                // Speed multiplier: whales get faster
+                speedMultiplier = 1 + (difficultyLevel - 1) * 0.15;
+                
+                updateDifficultyDisplay();
+            }
+        }
+        
+        function updateDifficultyDisplay() {
+            document.getElementById('difficulty').textContent = `Level: ${difficultyLevel} | Speed: ${speedMultiplier.toFixed(1)}x`;
         }
         
         // Input handling
@@ -298,12 +348,16 @@
         function gameOver() {
             gameRunning = false;
             document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            document.getElementById('finalLevel').textContent = `Reached Level: ${difficultyLevel}`;
             document.getElementById('gameOver').style.display = 'block';
         }
         
         function restartGame() {
-            currentTrack = 1;
+            currentTrack = 2;
             score = 0;
+            difficultyLevel = 1;
+            speedMultiplier = 1;
+            currentSpawnRate = baseSpawnRate;
             gameRunning = true;
             whales = [];
             frameCount = 0;
@@ -311,6 +365,7 @@
             boy.targetY = TRACKS[currentTrack];
             document.getElementById('gameOver').style.display = 'none';
             updateScore();
+            updateDifficultyDisplay();
         }
         
         function gameLoop() {
@@ -332,8 +387,8 @@
             if (gameRunning) {
                 frameCount++;
                 
-                // Spawn whales
-                if (frameCount % 90 === 0) {
+                // Spawn whales at dynamic rate
+                if (frameCount % currentSpawnRate === 0) {
                     spawnWhale();
                 }
                 
@@ -350,11 +405,12 @@
                         gameOver();
                     }
                     
-                    // Score
+                    // Score and difficulty update
                     if (!whales[i].passed && whales[i].x < boy.x) {
                         whales[i].passed = true;
                         score++;
                         updateScore();
+                        updateDifficulty();
                     }
                     
                     // Remove off-screen
@@ -376,8 +432,10 @@
             canvas.height = window.innerHeight;
             
             TRACKS = [
-                canvas.height * 0.25,
-                canvas.height * 0.5,
+                canvas.height * 0.15,
+                canvas.height * 0.30,
+                canvas.height * 0.45,
+                canvas.height * 0.60,
                 canvas.height * 0.75
             ];
             
